@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <ctime>
 #include <chrono>
@@ -6,8 +5,6 @@
 #ifdef _WIN32
 #pragma comment(lib, "ws2_32.lib")
 #include <winsock2.h>
-#include <windows.h>
-#include <ws2tcpip.h>
 #elif __linux__
 #include <sys/types.h>
 #include <sys/socket.h>
