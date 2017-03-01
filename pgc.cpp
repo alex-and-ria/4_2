@@ -138,8 +138,24 @@ class intf{
 		}
 };
 
+class wadaptee{
+	public:
+		void wr(){
+			cout<<"\n\nit is _WIN32\n";
+		}
+};
+
+class ladaptee{
+	public:
+		void wr(){
+			cout<<"\n\nit is __linux__\n";
+		}
+};
+
+#ifdef _WIN32
 class cw: public target{
 	public:
+		wadaptee adt;
 		cw(target tg){
 			nSequence = tg.nSequence;
 			nTimeOut = tg.nTimeOut;	//Request time out for echo request (in milliseconds)
@@ -286,11 +302,14 @@ class cw: public target{
 				}
 				delete []SendBuffer;		
 			}
+			adt.wr();
 		}
 };
+#endif
 
 class cl: public target{
 	public:
+		ladaptee adt;
 		cl(target tg){
 			nSequence = tg.nSequence;
 			nTimeOut = tg.nTimeOut;	//Request time out for echo request (in milliseconds)
@@ -417,32 +436,22 @@ class cl: public target{
 				}
 				delete []SendBuffer;		
 			}
+			adt.wr();
 		}
 };
 
-/*auto getpng(intf& intrfc){
+auto getpng(intf& intrfc){
 	#ifdef _WIN32
 		cw ifptr=intrfc.tgp;
-		return ifptr;
 	#elif __linux__
 		cl ifptr=intrfc.tgp;
-		return ifptr
 	#endif
-}*/
+	return ifptr;
+}
 
 int main(int argc, char** argv){
 	intf intrfc(argc,argv);
 	if(intrfc.ret==1) return 0;
-	//auto finpng=getpng(intrfc);
-	#ifdef _WIN32
-		cw finpng=intrfc.tgp;
-	#elif __linux__
-		cl finpng=intrfc.tgp;
-	#endif
+	auto finpng=getpng(intrfc);
 	finpng.png();
-	//((cw)intrfc.tgp).png;
-	/*cw somecw;
-	target* trgt=&intrfc.tgp;
-	trgt=&somecw;
-	trgt->png();*/
 }
