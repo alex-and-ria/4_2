@@ -98,54 +98,53 @@ union dtb{
 	}
 };
 
-bool gff(string& ifn,dtb& fdt,bool& strt,ifstream& fpi){
+bool gff(string& ifn,string& dt,ifstream& fpi){
 	usi cnt=0;
-	for(ui8 i=0;i<bsz;i++) fdt.ucarr[i]=0;
-	if(strt==true){
-		strt=false;
-    	fpi.open(ifn.c_str(),ios::binary);
-    	if(!fpi.is_open()) {cout<<"\nerr: gff no input file"; system("pause"); return 0;}
-	}
-	unsigned char ch='\0';
-	while(1){
-		fpi>>noskipws>>ch;
-		if(fpi.eof()) break;
-		fdt.ucarr[cnt]=ch; cnt++;
-		//cout<<"\nch="<<ch<<" fdt.ucarr[cnt-1]="<<fdt.ucarr[cnt];
-		if(cnt==bsz) return 0;
+	fpi.open(ifn.c_str(),ios::binary);
+	if(!fpi.is_open()) {cout<<"\nerr: gff no input file"; system("pause"); return 0;}
+	else{
+		while(1){
+			unsigned char ch='\0';
+			fpi>>noskipws>>ch;
+			if(fpi.eof()) break;
+			dt+=ch;
+			//cout<<"\nch="<<ch<<" fdt.ucarr[cnt-1]="<<fdt.ucarr[cnt];
+		}
 	}
 	fpi.close();    
     return 1;
 }
 
-bool ptf(string& ofn,dtb& fdt,bool& strt,ofstream& fpo,ui8 fl){
-	if(strt==true){
-    	fpo.open(ofn.c_str(),ios::binary);
-    	if(!fpo.is_open()) {cout<<"\nerr:ptff no output file"; system("pause"); return 0;}
-	}
-	while(1){
-		for(ui8 i=0;i<bsz;i++){
-			if(fl==2){fpo<<fdt.ucarr[i]; cout<<hex<<(usi)fdt.ucarr[i]<<' ';}
-			cout<<' ';
-			for(ui8 j=0;j<8;j++){
-				if(fl==1) cout<<(usi)fdt.barr[i].getb(7-j);
-				else if(fl==0) cout<<(usi)fdt.barr[i].getb(j);
-			}
+bool ptf(string& ofn,dtb& fdt,ofstream& fpo,ui8 fl){
+	for(ui8 i=0;i<bsz;i++){
+		if(fl==2){fpo<<fdt.ucarr[i]; cout<<hex<<(usi)fdt.ucarr[i]<<' ';}
+		cout<<' ';
+		for(ui8 j=0;j<8;j++){
+			if(fl==1) cout<<(usi)fdt.barr[i].getb(7-j);
+			else if(fl==0) cout<<(usi)fdt.barr[i].getb(j);
 		}
-		strt=false;
-		if(strt==false) break;
 	}
-	fpo.close();    
-    return 1;
 }
 
 void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 	dtb fdt; bool strt=true,strt1=true; ifstream fpi; ofstream fpo; ui8 gffres;
+	fpo.open(dst.c_str(),ios::binary);
+    if(!fpo.is_open()) {cout<<"\nerr:ptff no output file"; system("pause"); return;}
 	cout<<'\n';
-	cout<<"\nkey="; ptf(dst,key,strt1,fpo,1);
-	//do{
-		gffres=gff(srs,fdt,strt,fpi);dtb apc1,apc2,aip;
-		cout<<"\ndata="; ptf(dst,fdt,strt1,fpo,1);
+	cout<<"\nkey="; ptf(dst,key,fpo,1);
+	string dt; gff(srs,dt,fpi);
+	while(dt.length()!=0){
+		for(ui8 i=0;i<8;i++){
+			if(dt.length()>0){
+				cout<<"\nsizeof(dt)="<<dt.length()<<' '<<dt<<'\n'; //system("pause");
+				fdt.ucarr[i]=(unsigned char)((dt.c_str())[0]);
+				cout<<"\ndt="<<hex<<(usi)fdt.ucarr[i]<<dec;
+				dt.erase(dt.begin());
+			}
+			else fdt.ucarr[i]=0;
+		}
+		dtb apc1,apc2,aip;
+		cout<<"\ndata="; ptf(dst,fdt,fpo,1); cout<<'\n';
 		for(ui8 i=0;i<sizeof(pc1);i++){
 			ui8 nbyte=i/8, nbit=i%8, nbyte1=(pc1[i]-1)/8,nbit1=(pc1[i]-1)%8;
 			apc1.barr[nbyte].putb(nbit,key.barr[nbyte1].getb(7-nbit1));
@@ -172,7 +171,7 @@ void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				apc2.barr[nbyte].putb(nbit,apc1.barr[nbyte1].getb(nbit1));
 			}//apc2 is round key; apc1 is Ci, Di;
 			ksh.push_back(apc2);
-			cout<<"\nkeysh="; ptf(dst,apc2,strt1,fpo,0);
+			cout<<"\nkeysh="; ptf(dst,apc2,fpo,0);
 			vector<bool> li,ri;	aip.getarrd(li,ri); dtb aep,asb,app;
 			//cout<<'\n'; for(ui8 l=0;l<li.size();l++) cout<<li.at(l); cout<<'\t';
 			//for(ui8 l=0;l<ri.size();l++) cout<<ri.at(l); cout<<'\n'; system("pause");
@@ -180,12 +179,12 @@ void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				ui8 nbyte=j/8, nbit=j%8, nbyte1=(ep[j]-1)/8,nbit1=(ep[j]-1)%8;
 				aep.barr[nbyte].putb(nbit,ri.at(ep[j]-1));
 			}
-			cout<<"\naep="; ptf(dst,aep,strt1,fpo,0); cout<<'\n';
+			cout<<"\naep="; ptf(dst,aep,fpo,0); cout<<'\n';
 			for(ui8 j=0;j<sizeof(ep);j++){//xor ki;
 				ui8 nbyte=j/8, nbit=j%8;
 				aep.barr[nbyte].putb(nbit,(apc2.barr[nbyte].getb(nbit)^aep.barr[nbyte].getb(nbit)));
 			}
-			cout<<"\naep xor ki ="; ptf(dst,aep,strt1,fpo,0);
+			cout<<"\naep xor ki ="; ptf(dst,aep,fpo,0);
 			//vector<bool> sbvl,sbvr; aep.getarrd(sbvl,sbvr);
 			//for(usi j=0;j<sbvr.size();j++) sbvl.push_back(sbvr.at(j));
 			//cout<<"\n\t"; for(usi j=0;j<sbvl.size();j++) cout<<sbvl.at(j); cout<<' ';
@@ -252,12 +251,12 @@ void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				}
 				cout<<"\nuctmp="<<(usi)uctmp<<' '<<hex<<(usi)uctmp<<dec;;
 			}
-			cout<<"\nasb="; ptf(dst,asb,strt1,fpo,1);
+			cout<<"\nasb="; ptf(dst,asb,fpo,1);
 			for(ui8 j=0;j<sizeof(pp);j++){
 				ui8 nbyte=j/8, nbit=j%8, nbyte1=(pp[j]-1)/8,nbit1=(pp[j]-1)%8;
 				app.barr[nbyte].putb(nbit,asb.barr[nbyte1].getb(7-nbit1));
 			}
-			cout<<"\napp="; ptf(dst,app,strt1,fpo,0);
+			cout<<"\napp="; ptf(dst,app,fpo,0);
 			//cout<<'\n'; for(ui8 j=0;j<li.size();j++) cout<<li.at(j); cout<<' '; //system("pause");
 			vector<bool> resr;
 			for(ui8 j=0;j<li.size();j++) resr.push_back(app.barr[j/8].getb(j%8)^li.at(j));
@@ -266,14 +265,14 @@ void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 			//cout<<"\nsizrof(ri)="<<ri.size()<<" sizeof(resr)="<<resr.size(); cout<<' '; system("pause");
 			if(i==15){
 				aip.getbarrd(resr,ri); dtb aip1;
-				cout<<"\nbinv="; ptf(dst,aip,strt1,fpo,0);
+				cout<<"\nbinv="; ptf(dst,aip,fpo,0);
 				for(ui8 j=0;j<sizeof(ip1);j++){
 					ui8 nbyte=j/8, nbit=j%8, nbyte1=(ip1[j]-1)/8,nbit1=(ip1[j]-1)%8;
 					aip1.barr[nbyte].putb(nbit,aip.barr[nbyte1].getb(nbit1));
 				}
-				aip1.invb(); strt1=true; ptf(dst,aip1,strt1,fpo,2);
-				cout<<"\nainv="; ptf(dst,aip1,strt1,fpo,1);
-				cout<<'\n'; system("pause");
+				aip1.invb(); strt1=true; ptf(dst,aip1,fpo,2);
+				cout<<"\nainv="; ptf(dst,aip1,fpo,1);
+				cout<<'\n'; //system("pause");
 			}
 			else{
 				aip.getbarrd(ri,resr);
@@ -282,15 +281,29 @@ void desenc(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 			cout<<'\n';
 		}
 		cout<<'\n';
+	}
+	fpo.close(); cout<<'\n'; //system("pause");
 }
 
 void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 	dtb fdt; bool strt=true,strt1=true; ifstream fpi; ofstream fpo; ui8 gffres;
+	fpo.open(dst.c_str(),ios::binary);
+    if(!fpo.is_open()) {cout<<"\nerr:ptff no output file"; system("pause"); return;}
 	cout<<'\n';
-	cout<<"\nkey="; ptf(dst,key,strt1,fpo,1);
-	//do{
-		gffres=gff(srs,fdt,strt,fpi);dtb apc1,apc2,aip;
-		cout<<"\ndata="; ptf(dst,fdt,strt1,fpo,1);
+	cout<<"\nkey="; ptf(dst,key,fpo,1);
+	string dt; gff(srs,dt,fpi);
+	while(dt.length()!=0){
+		for(ui8 i=0;i<8;i++){
+			if(dt.length()>0){
+				cout<<"\nsizeof(dt)="<<dt.length()<<' '<<dt<<'\n'; //system("pause");
+				fdt.ucarr[i]=(unsigned char)((dt.c_str())[0]);
+				cout<<"\ndt="<<hex<<(usi)fdt.ucarr[i]<<dec;
+				dt.erase(dt.begin());
+			}
+			else fdt.ucarr[i]=0;
+		}
+		dtb apc1,apc2,aip;
+		cout<<"\ndata="; ptf(dst,fdt,fpo,1);
 		for(ui8 i=0;i<sizeof(pc1);i++){
 			ui8 nbyte=i/8, nbit=i%8, nbyte1=(pc1[i]-1)/8,nbit1=(pc1[i]-1)%8;
 			apc1.barr[nbyte].putb(nbit,key.barr[nbyte1].getb(7-nbit1));
@@ -317,7 +330,7 @@ void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				apc2.barr[nbyte].putb(nbit,apc1.barr[nbyte1].getb(nbit1));
 			}//apc2 is round key; apc1 is Ci, Di;
 			dtb rndkey=ksh.at(ksh.size()-1); ksh.pop_back();
-			cout<<"\nkeysh="; ptf(dst,rndkey,strt1,fpo,0);
+			cout<<"\nkeysh="; ptf(dst,rndkey,fpo,0);
 			vector<bool> li,ri;	aip.getarrd(li,ri); dtb aep,asb,app;
 			//cout<<'\n'; for(ui8 l=0;l<li.size();l++) cout<<li.at(l); cout<<'\t';
 			//for(ui8 l=0;l<ri.size();l++) cout<<ri.at(l); cout<<'\n'; system("pause");
@@ -325,12 +338,12 @@ void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				ui8 nbyte=j/8, nbit=j%8, nbyte1=(ep[j]-1)/8,nbit1=(ep[j]-1)%8;
 				aep.barr[nbyte].putb(nbit,ri.at(ep[j]-1));
 			}
-			cout<<"\naep="; ptf(dst,aep,strt1,fpo,0); cout<<'\n';
+			cout<<"\naep="; ptf(dst,aep,fpo,0); cout<<'\n';
 			for(ui8 j=0;j<sizeof(ep);j++){//xor ki;
 				ui8 nbyte=j/8, nbit=j%8;
 				aep.barr[nbyte].putb(nbit,(rndkey.barr[nbyte].getb(nbit)^aep.barr[nbyte].getb(nbit)));
 			}
-			cout<<"\naep xor ki ="; ptf(dst,aep,strt1,fpo,0);
+			cout<<"\naep xor ki ="; ptf(dst,aep,fpo,0);
 			//vector<bool> sbvl,sbvr; aep.getarrd(sbvl,sbvr);
 			//for(usi j=0;j<sbvr.size();j++) sbvl.push_back(sbvr.at(j));
 			//cout<<"\n\t"; for(usi j=0;j<sbvl.size();j++) cout<<sbvl.at(j); cout<<' ';
@@ -397,12 +410,12 @@ void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 				}
 				cout<<"\nuctmp="<<(usi)uctmp<<' '<<hex<<(usi)uctmp<<dec;;
 			}
-			cout<<"\nasb="; ptf(dst,asb,strt1,fpo,1);
+			cout<<"\nasb="; ptf(dst,asb,fpo,1);
 			for(ui8 j=0;j<sizeof(pp);j++){
 				ui8 nbyte=j/8, nbit=j%8, nbyte1=(pp[j]-1)/8,nbit1=(pp[j]-1)%8;
 				app.barr[nbyte].putb(nbit,asb.barr[nbyte1].getb(7-nbit1));
 			}
-			cout<<"\napp="; ptf(dst,app,strt1,fpo,0);
+			cout<<"\napp="; ptf(dst,app,fpo,0);
 			//cout<<'\n'; for(ui8 j=0;j<li.size();j++) cout<<li.at(j); cout<<' '; //system("pause");
 			vector<bool> resr;
 			for(ui8 j=0;j<li.size();j++) resr.push_back(app.barr[j/8].getb(j%8)^li.at(j));
@@ -411,14 +424,14 @@ void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 			//cout<<"\nsizrof(ri)="<<ri.size()<<" sizeof(resr)="<<resr.size(); cout<<' '; system("pause");
 			if(i==15){
 				aip.getbarrd(resr,ri); dtb aip1;
-				cout<<"\nbinv="; ptf(dst,aip,strt1,fpo,0);
+				cout<<"\nbinv="; ptf(dst,aip,fpo,0);
 				for(ui8 j=0;j<sizeof(ip1);j++){
 					ui8 nbyte=j/8, nbit=j%8, nbyte1=(ip1[j]-1)/8,nbit1=(ip1[j]-1)%8;
 					aip1.barr[nbyte].putb(nbit,aip.barr[nbyte1].getb(nbit1));
 				}
-				aip1.invb(); strt1=true; ptf(dst,aip1,strt1,fpo,2);
-				cout<<"\nainv="; ptf(dst,aip1,strt1,fpo,1);
-				cout<<'\n'; system("pause");
+				aip1.invb(); strt1=true; ptf(dst,aip1,fpo,2);
+				cout<<"\nainv="; ptf(dst,aip1,fpo,1);
+				cout<<'\n'; //system("pause");
 			}
 			else{
 				aip.getbarrd(ri,resr);
@@ -427,12 +440,31 @@ void desdec(string& srs, string& dst, dtb key,vector<dtb>& ksh){
 			cout<<'\n';
 		}
 		cout<<'\n';
+	}
+	fpo.close();
+}
+
+void tdesenc(string tsrs, string tdst,dtb tkey,vector<dtb>& tksh,dtb tkey1,vector<dtb>& tksh1,dtb tkey2,vector<dtb>& tksh2){
+	desenc(tsrs, tdst, tkey, tksh);
+	desenc(tdst, tsrs, tkey1, tksh1);
+	desenc(tsrs, tdst, tkey2, tksh2);
+}
+void tdesdec(string tdst,string tddst,dtb tkey,vector<dtb>& tksh,dtb tkey1,vector<dtb>& tksh1,dtb tkey2,vector<dtb>& tksh2){
+	desdec(tdst, tddst, tkey2,tksh2);
+	desdec(tddst, tdst, tkey1,tksh1);
+	desdec(tdst, tddst, tkey,tksh);
 }
 
 int main(){
 	string srs="q.txt",dst="q1.txt",ddst="q2.txt"; dtb key={59,56,152,55,21,32,247,94}; vector<dtb> ksh;
 	desenc(srs, dst, key, ksh);
 	desdec(dst, ddst, key,ksh);
+	
+	string tsrs="tq.txt",tdst="tq1.txt",tddst="tq2.txt";
+	dtb tkey={59,56,152,55,21,32,247,94}, tkey1={59,56,152,55,21,32,247,94}, tkey2={59,56,152,55,21,32,247,94};
+	vector<dtb> tksh,tksh1,tksh2;
+	tdesenc(tsrs,tdst,tkey,tksh,tkey1,tksh1,tkey2,tksh2);
+	tdesdec(tdst,tddst,tkey,tksh,tkey1,tksh1,tkey2,tksh2);
 	
 	return 0;
 }
