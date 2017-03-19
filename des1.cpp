@@ -109,7 +109,7 @@ bool gff(string& ifn,dtb& fdt,bool& strt,ifstream& fpi){
     return 1;
 }
 
-bool ptf(string& ofn,dtb& fdt,bool& strt,ofstream& fpo){
+bool ptf(string& ofn,dtb& fdt,bool& strt,ofstream& fpo,bool fl){
 	if(strt==true){
     	fpo.open(ofn.c_str(),ios::binary);
     	if(!fpo.is_open()) {cout<<"\nerr:ptff no output file"; system("pause"); return 0;}
@@ -119,7 +119,8 @@ bool ptf(string& ofn,dtb& fdt,bool& strt,ofstream& fpo){
 			//fpo<<' '; cout<<' '<<hex<<(usi)fdt.ucarr[i]<<' ';
 			cout<<' ';
 			for(ui8 j=0;j<8;j++){
-				cout<<(usi)fdt.barr[i].getb(7-j);
+				if(fl) cout<<(usi)fdt.barr[i].getb(7-j);
+				else cout<<(usi)fdt.barr[i].getb(j);
 			}
 		}
 		strt=false;
@@ -130,11 +131,13 @@ bool ptf(string& ofn,dtb& fdt,bool& strt,ofstream& fpo){
 }
 
 int main(){
-	string srs="q.txt",dst="q1.txt"; dtb fdt,key={19,52,87,121,155,188,223,241};
+	string srs="q.txt",dst="q1.txt"; dtb fdt,key={59,56,152,55,21,32,247,94};
 	bool strt=true,strt1=true; ifstream fpi; ofstream fpo; ui8 gffres;
 	cout<<'\n';
+	cout<<"\nkey="; ptf(dst,key,strt1,fpo,1);
 	//do{
 		gffres=gff(srs,fdt,strt,fpi);dtb apc1,apc2,aip;
+		cout<<"\ndata="; ptf(dst,fdt,strt1,fpo,1);
 		for(ui8 i=0;i<sizeof(pc1);i++){
 			ui8 nbyte=i/8, nbit=i%8, nbyte1=(pc1[i]-1)/8,nbit1=(pc1[i]-1)%8;
 			apc1.barr[nbyte].putb(nbit,key.barr[nbyte1].getb(7-nbit1));
@@ -146,13 +149,8 @@ int main(){
 		for(ui8 i=0;i<sizeof(itrol);i++){//round;
 			for(ui8 j=0;j<itrol[i];j++){//num of shifts;
 				vector<bool> bvecl,bvecr; apc1.getarr(bvecl,bvecr);
-				/*cout<<'\n';
-				for(ui8 l=0;l<bvecl.size();l++){
-					cout<<bvecl.at(l);
-				} cout<<'\t';
-				for(ui8 l=0;l<bvecr.size();l++){
-					cout<<bvecr.at(l);
-				}cout<<'\n'; system("pause");*/
+				/*cout<<'\n'; for(ui8 l=0;l<bvecl.size();l++) cout<<bvecl.at(l); cout<<'\t';
+				for(ui8 l=0;l<bvecr.size();l++) cout<<bvecr.at(l); cout<<'\n'; system("pause");*/
 				ui8 u8tmpl=bvecl.at(0), u8tmpr=bvecr.at(0);
 				for(ui8 k=0;k<bvecl.size()-1;k++){
 					bvecl.at(k)=bvecl.at(k+1);
@@ -165,30 +163,36 @@ int main(){
 				ui8 nbyte=k/8, nbit=k%8, nbyte1=(pc2[k]-1)/8,nbit1=(pc2[k]-1)%8;
 				apc2.barr[nbyte].putb(nbit,apc1.barr[nbyte1].getb(nbit1));
 			}//apc2 is round key; apc1 is Ci, Di;
-			//cout<<'\n'; ptf(dst,apc2,strt1,fpo); cout<<'\n'; system("pause");
-			vector<bool> li,ri;	aip.getarrd(li,ri); dtb aep,asb;
-			/* cout<<'\n'; for(ui8 j=0;j<li.size();j++) cout<<li.at(j); cout<<' ';
-			for(ui8 j=0;j<li.size();j++) cout<<ri.at(j); cout<<'\n'; system("pause");*/
+			cout<<"\nkeysh="; ptf(dst,apc2,strt1,fpo,0);
+			vector<bool> li,ri;	aip.getarrd(li,ri); dtb aep,asb,app;
+			//cout<<'\n'; for(ui8 l=0;l<li.size();l++) cout<<li.at(l); cout<<'\t';
+			//for(ui8 l=0;l<ri.size();l++) cout<<ri.at(l); cout<<'\n'; system("pause");
 			for(ui8 j=0;j<sizeof(ep);j++){
 				ui8 nbyte=j/8, nbit=j%8, nbyte1=(ep[j]-1)/8,nbit1=(ep[j]-1)%8;
 				aep.barr[nbyte].putb(nbit,ri.at(ep[j]-1));
 			}
-			//cout<<'\n'; ptf(dst,aep,strt1,fpo); cout<<'\n'; system("pause");
-			for(ui8 j=0;j<sizeof(ep);j++){
+			cout<<"\naep="; ptf(dst,aep,strt1,fpo,0); cout<<'\n';
+			for(ui8 j=0;j<sizeof(ep);j++){//xor ki;
 				ui8 nbyte=j/8, nbit=j%8;
 				aep.barr[nbyte].putb(nbit,(apc2.barr[nbyte].getb(nbit)^aep.barr[nbyte].getb(nbit)));
-			}// cout<<'\n'; ptf(dst,aep,strt1,fpo); cout<<'\n'; system("pause");
+			}
+			cout<<"\naep xor ki ="; ptf(dst,aep,strt1,fpo,0);
+			//vector<bool> sbvl,sbvr; aep.getarrd(sbvl,sbvr);
+			//for(usi j=0;j<sbvr.size();j++) sbvl.push_back(sbvr.at(j));
+			//cout<<"\n\t"; for(usi j=0;j<sbvl.size();j++) cout<<sbvl.at(j); cout<<' ';
 			for(ui8 j=0,scnt=0;j<sizeof(ep);j+=6,scnt++){
 				ui8 nbyte=j/8, nbit=j%8;
 				ui8 nbyte1=(j+1)/8, nbit1=(j+1)%8;
 				ui8 nbyte2=(j+2)/8, nbit2=(j+2)%8;
 				ui8 nbyte3=(j+3)/8, nbit3=(j+3)%8;
-				ui8 nbyte4=(j+4)/8, nbit4=(j+3)%8;
+				ui8 nbyte4=(j+4)/8, nbit4=(j+4)%8;
 				ui8 nbyte5=(j+5)/8, nbit5=(j+5)%8;
 				unsigned char uctmp;
-				/*cout<<"\nx,y="<<aep.barr[nbyte].getb(nbit)*2+aep.barr[nbyte5].getb(nbit5)<<' '
+				cout<<"x,y="<<aep.barr[nbyte].getb(nbit)*2+aep.barr[nbyte5].getb(nbit5)<<' '
 					<<aep.barr[nbyte1].getb(nbit1)*2*2*2+aep.barr[nbyte2].getb(nbit2)*2*2+
-					aep.barr[nbyte3].getb(nbit3)*2+aep.barr[nbyte4].getb(nbit4);*/
+					aep.barr[nbyte3].getb(nbit3)*2+aep.barr[nbyte4].getb(nbit4);
+				cout<<'\n'<<(usi)aep.barr[nbyte].getb(nbit)<<(usi)aep.barr[nbyte1].getb(nbit1)<<(usi)aep.barr[nbyte2].getb(nbit2)
+					<<(usi)aep.barr[nbyte3].getb(nbit3)<<(usi)aep.barr[nbyte4].getb(nbit4)<<(usi)aep.barr[nbyte5].getb(nbit5)<<'\n';
 				switch(scnt){
 					case 0: 
 						uctmp=sb1[aep.barr[nbyte].getb(nbit)*2+aep.barr[nbyte5].getb(nbit5)]
@@ -237,9 +241,21 @@ int main(){
 				else{
 					asb.ucarr[scnt/2]+=uctmp;
 				}
-				cout<<"\nuctmp="<<(usi)uctmp;
-			}cout<<'\n'; ptf(dst,asb,strt1,fpo); cout<<'\n'; system("pause");
-			
+				cout<<"\nuctmp="<<(usi)uctmp<<' '<<hex<<(usi)uctmp<<dec;;
+			}
+			cout<<"\nasb="; ptf(dst,asb,strt1,fpo,1);
+			for(ui8 j=0;j<sizeof(pp);j++){
+				ui8 nbyte=j/8, nbit=j%8, nbyte1=(pp[j]-1)/8,nbit1=(pp[j]-1)%8;
+				app.barr[nbyte].putb(nbit,asb.barr[nbyte1].getb(7-nbit1));
+			}//cout<<'\n'; ptf(dst,app,strt1,fpo,0); cout<<'\n'; //system("pause");
+			//cout<<'\n'; for(ui8 j=0;j<li.size();j++) cout<<li.at(j); cout<<' '; //system("pause");
+			vector<bool> resr;
+			for(ui8 j=0;j<li.size();j++) resr.push_back(app.barr[j/8].getb(j%8)^li.at(j));
+			//cout<<'\n'; for(ui8 j=0;j<li.size();j++) cout<<ri.at(j);
+			//cout<<'\t'; for(ui8 j=0;j<resr.size();j++) cout<<resr.at(j); cout<<' '; system("pause");
+			//cout<<"\nsizrof(ri)="<<ri.size()<<" sizeof(resr)="<<resr.size(); cout<<' '; system("pause");
+			aip.getbarrd(ri,resr); ri.clear(); li.clear();
+			cout<<'\n'; system("pause");
 		}
 		cout<<'\n';
 	return 0;
