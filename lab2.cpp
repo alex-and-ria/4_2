@@ -202,9 +202,58 @@ int main(){
 	cout<<"result:\n"; for(usi i=0;i<vutmp.size();i++) cout<<vutmp.at(i).val<<' '<<vutmp.at(i).num<<'\n';
 	cout<<'\n'; cnt++;
 
-	
-	
-	
+	cout<<cnt<<" full pairwise comparison method;\n";
+	ez.clear(); vutmp.clear(); totk=0; vector<vector<usib>> ez1; double totk1=0; usi n=3;
+	darr[0]=0;darr[1]=13.0/16;darr[2]=1.0/16;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez.push_back(vutmp);
+	darr[0]=3.0/16;darr[1]=0;darr[2]=7.0/16;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez.push_back(vutmp);
+	darr[0]=15.0/16;darr[1]=9.0/16;darr[2]=0;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez.push_back(vutmp);
+	darr[0]=0;darr[1]=11.0/16;darr[2]=4.0/16;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez1.push_back(vutmp);
+	darr[0]=5.0/16;darr[1]=0;darr[2]=5.0/16;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez1.push_back(vutmp);
+	darr[0]=12.0/16;darr[1]=11.0/16;darr[2]=0;
+	getubv(darr,vutmp,sizeof(darr)/sizeof(darr[0]));
+	ez1.push_back(vutmp);
+	for(usi i=0;i<ez.size();i++){
+		for(usi j=0; j<ez.at(i).size();j++){
+			cout<<ez.at(i).at(j).val<<' ';
+			ez.at(i).at(j).num=j;
+			vutmp.at(j).val=0; vutmp.at(j).num=j;
+		}
+		cout<<'\n';
+	}
+	for(usi i=0;i<ez1.size();i++){
+		for(usi j=0; j<ez1.at(i).size();j++){
+			cout<<ez1.at(i).at(j).val<<' ';
+			ez1.at(i).at(j).num=j;
+		}
+		cout<<'\n';
+	}
+	for(usi i=0;i<ez.size();i++){
+		totk=0; totk1=0;
+		for(usi j=0; j<ez.at(i).size();j++){
+			totk+=ez.at(i).at(j).val;
+			totk1+=ez1.at(i).at(j).val;
+		}
+		ez.at(i).push_back(usib(totk/(n*(n-1)),i));
+		ez1.at(i).push_back(usib(totk1/(n*(n-1)),i));
+	}
+	totk=0;
+	for(usi i=0;i<ez.size();i++) totk+=ez.at(i).at(ez.at(i).size()-1).val+ez1.at(i).at(ez1.at(i).size()-1).val;
+	for(usi i=0;i<vutmp.size();i++){
+		vutmp.at(i).val=(ez.at(i).at(ez.at(i).size()-1).val+ez1.at(i).at(ez1.at(i).size()-1).val)/totk;
+	}
+	stable_sort(vutmp.begin(),vutmp.end(),dscsrt);
+	cout<<"result:\n"; for(usi i=0;i<vutmp.size();i++) cout<<vutmp.at(i).val<<' '<<vutmp.at(i).num<<'\n';
+	cout<<'\n'; cnt++;
 	
 	
 	
