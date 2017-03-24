@@ -253,13 +253,5 @@ int main(){
 	}
 	stable_sort(vutmp.begin(),vutmp.end(),dscsrt);
 	cout<<"result:\n"; for(usi i=0;i<vutmp.size();i++) cout<<vutmp.at(i).val<<' '<<vutmp.at(i).num<<'\n';
-	cout<<'\n'; cnt++;
-	
-	
-	
-	
-	
-	
-	
 	return 0;
 }
