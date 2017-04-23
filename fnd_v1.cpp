@@ -1,7 +1,4 @@
-// пример работы детектора границ Кенни - cvCanny()
-//
-// robocraft.ru
-//
+//детектор границ Кенни - cvCanny()
 
 #include <cv.h>
 #include <highgui.h>
