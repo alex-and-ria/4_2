@@ -12,7 +12,7 @@ class my_bp{
       unsigned char cntrlp,unsigned char Ocd);
     unsigned char enp,dir,stp,dly,cntrl;
     unsigned char O;//Ox -- 1; Oy -- 2; Oz -- 3;
-    unsigned int incnt,cntzm=1500;
+    unsigned int incnt,cntm=0,cntzm=1400,cntym=150000,cntxm=23500;
     void initb();
     void mv(unsigned int num,bool to);
 };
