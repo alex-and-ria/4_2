@@ -13,10 +13,10 @@ my_bp mbpx(22/*en*/,23/*dirp*/,
       24/*stpp*/,1/*dlyv*/,
      25/*cntrlp*/,1/*Ocd*/);
 
-my_rot mrot(38,39,40,40,50);
+my_rot mrot(38,39,40,41,50);
 
 void setup() {
-  pinMode(pumpp,OUTPUT);
+  /*pinMode(pumpp,OUTPUT);
   mbpz.initb();
   mbpy.initb();
   mbpx.initb();
@@ -30,14 +30,15 @@ void setup() {
   //mbpx.mv(mbpx.cntm-50,0);
   mbpx.mv(50,0);
   delay(100);
-  digitalWrite(pumpp,HIGH);
+  digitalWrite(pumpp,HIGH);*/
   
   /*delay(1000);
   mbpz.mv(200,0);*/
-  delay(100);
+  /*delay(100);
   digitalWrite(pumpp,LOW);
-  delay(1000);
-  mrot.mv(10,1);
+  delay(1000);*/
+  mrot.mv(50,0);
+  mrot.mv(50,1);
 }
 
 void loop() {
